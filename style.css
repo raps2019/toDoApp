@@ -1,0 +1,16 @@
+.task-container {
+    border: solid black 1px;
+}
+
+.category-container {
+    border: solid black 1px;
+}
+
+.content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+}
+
+.category-div {
+    display: flex;
+}
