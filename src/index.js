@@ -40,7 +40,7 @@ const taskProto = {
 }
 
 //task Factory Function
-const taskFactory = (title,details,dueDate,priority,category) => {
+const taskFactory = (title,details,dueDate,priority,category,active) => {
 
     let task = Object.create(taskProto);
     let status = 'notDone';  
@@ -50,6 +50,7 @@ const taskFactory = (title,details,dueDate,priority,category) => {
     task.dueDate = dueDate;
     task.priority = priority;
     task.category = category;
+    task.active = active;
     task.status = status;
     task.id = Date.now().toString();
     
@@ -62,17 +63,18 @@ const categoryProto = {
     }
 }
 
-const categoryFactory = (title) => {
+const categoryFactory = (title,active) => {
     let category = Object.create(categoryProto);
 
     category.title = title;
     category.id = Date.now().toString();
+    category.active = active;
 
     return category;
 }
 
-const addCategory = (categoryList,title) => {
-    categoryList.push(categoryFactory(title));
+const addCategory = (categoryList,title,active) => {
+    categoryList.push(categoryFactory(title,active));
     return categoryList;
 }
 
@@ -204,16 +206,15 @@ const drawAddCategoryForm = () => {
     addCategoryDiv.appendChild(addCategoryForm);
 }
 
-const drawCategoryList = (categoryList,activeCategory) => {
+//Draw the category list and set active category
+const drawCategoryList = (categoryList) => {
     categoryListContainer.innerHTML = '';
-    // let categoryListDiv = document.createElement('div');
     
     categoryList.forEach(category => {
         let categoryDiv = document.createElement('div');
         categoryDiv.setAttribute('data-id',category.id);
         categoryDiv.setAttribute('class','category-div')
-        if (category.title === activeCategory) {
-            // categoryDiv.setAttribute('class','active-category');
+        if (category.active === true) {
             categoryDiv.className += ' active-category';
         }
         let categoryP = document.createElement('p');
@@ -226,9 +227,9 @@ const drawCategoryList = (categoryList,activeCategory) => {
         categoryDiv.appendChild(categoryDeleteButton);
         categoryListContainer.appendChild(categoryDiv);
     });
-
-    // categoryListContainer.appendChild(categoryListDiv);
 }
+
+//Draw the current category task list
 
 const deleteCategory = (categoryList,id) => {
     categoryList = categoryList.filter(category => category.id != id);
@@ -239,18 +240,11 @@ const deleteCategory = (categoryList,id) => {
 
 let taskList = [];
 let categoryList = [];
-let activeCategory;
 
 //Initialize Category List and Set Default Category
 const initializeCategoryList = (categoryList,mainCategoryName) => {
-    activeCategory = mainCategoryName;
-    addCategory(categoryList,mainCategoryName);
-    drawCategoryList(categoryList,activeCategory);
-    let activeCategoryId = categoryList.find(category => category.title === activeCategory).id;
-    console.log(activeCategoryId);
-    let activeCategoryDiv = document.querySelector(`[data-id = '${activeCategoryId}']`);
-    console.log(activeCategoryDiv)
-    activeCategoryDiv.classList.add('active-category')
+    addCategory(categoryList,mainCategoryName,true);
+    drawCategoryList(categoryList);
 }
 
 initializeCategoryList(categoryList,'Task List');
@@ -263,13 +257,12 @@ drawAddCategoryForm();
 
 let submitCategoryButton = document.querySelector('#submitCategoryButton');
 let submitCategoryInput = document.querySelector('#submitCategoryInput');
-let activeCategoryDiv = document.querySelector('.active-category');
 
 //Submit new category button event listener
 submitCategoryButton.addEventListener('click', function(e) {
     e.preventDefault();
-    categoryList = addCategory(categoryList,submitCategoryInput.value);
-    drawCategoryList(categoryList,activeCategory);
+    categoryList = addCategory(categoryList,submitCategoryInput.value,false);
+    drawCategoryList(categoryList);
 })
 
 
@@ -279,7 +272,7 @@ document.addEventListener('click',function(e) {
     if (e.target.className === 'category-delete-button') {
         let id = e.target.parentNode.dataset.id;
         categoryList = deleteCategory(categoryList,id)
-        drawCategoryList(categoryList,activeCategory);
+        drawCategoryList(categoryList);
     }
 });
 
@@ -287,13 +280,16 @@ document.addEventListener('click',function(e) {
 document.addEventListener('click', function(e) {
     e.preventDefault();
     if (e.target.className === 'category-name') {
-        activeCategory = e.target.innerHTML;
-        drawCategoryList(categoryList,activeCategory);
+        let clickedCategoryIndex = categoryList.findIndex((category) => category.id === e.target.parentNode.dataset.id);
+        categoryList[clickedCategoryIndex].active = true;
+        for (let i = 0; i < categoryList.length; i++) {
+            if (i != clickedCategoryIndex) {
+                categoryList[i].active = false;
+            }
+        }
+        drawCategoryList(categoryList);
     }
 })
-
-
-
 
 // deleteCategoryButton.addEventListener('click',function(e) {
 //     e.preventDefault();
