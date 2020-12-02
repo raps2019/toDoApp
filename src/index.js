@@ -43,7 +43,7 @@ const taskProto = {
 const taskFactory = (title,details,dueDate,priority,category,active) => {
 
     let task = Object.create(taskProto);
-    let status = 'notDone';  
+    let completed = false;  
 
     task.title = title;
     task.details = details;
@@ -51,7 +51,7 @@ const taskFactory = (title,details,dueDate,priority,category,active) => {
     task.priority = priority;
     task.category = category;
     task.active = active;
-    task.status = status;
+    task.completed = completed;
     task.id = Date.now().toString();
     
     return task;
@@ -79,14 +79,18 @@ const addCategory = (categoryList,title,active) => {
 }
 
 const addTask = (taskList,title,details,dueDate,priority,category) => {
-    taskList.push(title,details,dueDate,priority,category);
+    taskList.push(taskFactory(title,details,dueDate,priority,category));
+    return taskList;
 }
 
 //DOM Below ----------------------------------------------------------------
 //Query Selectors
 let taskContainer = document.querySelector("#taskContainer")
+let taskListContainer = document.querySelector('#taskListContainer');
+let addTaskContainer = document.querySelector('#addTaskContainer');
 let categoryContainer = document.querySelector('#categoryContainer')
 let categoryListContainer = document.querySelector("#categoryListContainer")
+let addCategoryContainer = document.querySelector('#addCategoryContainer')
 
 //Draw Add Task DOM
 const drawAddTask = () => {
@@ -95,13 +99,13 @@ const drawAddTask = () => {
     let addTaskButton = document.createElement('button');
     addTaskButton.innerHTML = 'Add New Task';
     addTaskDiv.appendChild(addTaskButton);
-    taskContainer.appendChild(addTaskDiv);
+    addTaskContainer.appendChild(addTaskDiv);
 }
 
 //Task Creation Form
 const drawAddTaskForm = () => {
 
-    let addTaskDiv = document.querySelector('#addTaskDiv')
+    // let addTaskDiv = document.querySelector('#addTaskDiv')
 
     //Create Form
     let addTaskForm = document.createElement('form');
@@ -113,6 +117,7 @@ const drawAddTaskForm = () => {
     titleLabel.innerHTML = 'Title:'
     let titleInput = document.createElement('input');
     titleInput.setAttribute('type','text');
+    titleInput.setAttribute('id',"taskTitleInput")
     titleDiv.appendChild(titleLabel);
     titleDiv.appendChild(titleInput);
     addTaskForm.appendChild(titleDiv);
@@ -123,6 +128,7 @@ const drawAddTaskForm = () => {
     detailsLabel.innerHTML = 'Details:'
     let detailsInput = document.createElement('input');
     detailsInput.setAttribute('type','text');
+    detailsInput.setAttribute('id',"taskDetailsInput")
     detailsDiv.appendChild(detailsLabel);
     detailsDiv.appendChild(detailsInput);
     addTaskForm.appendChild(detailsDiv);
@@ -134,6 +140,7 @@ const drawAddTaskForm = () => {
     //TODO ADD Moment.js to ensure date has not passed here ***
     let dueDateInput = document.createElement('input');
     dueDateInput.setAttribute('type','date');
+    dueDateInput.setAttribute('id',"taskDueDateInput")
     dueDateDiv.appendChild(dueDateLabel);
     dueDateDiv.appendChild(dueDateInput);
     addTaskForm.appendChild(dueDateDiv);
@@ -142,7 +149,8 @@ const drawAddTaskForm = () => {
     let priorityDiv = document.createElement('div');
     let priorityLabel = document.createElement('label');
     priorityLabel.innerHTML = 'Priority:'
-    let prioritySelect = document.createElement('select');
+    let prioritySelector = document.createElement('select');
+    prioritySelector.setAttribute('id','taskPrioritySelector')
     let option1 = document.createElement('option');
     option1.setAttribute('value','normal');
     option1.innerHTML = 'Normal';
@@ -152,21 +160,42 @@ const drawAddTaskForm = () => {
     let option3 = document.createElement('option');
     option3.setAttribute('value','low');
     option3.innerHTML = 'Low';  
-    prioritySelect.appendChild(option1);
-    prioritySelect.appendChild(option2);
-    prioritySelect.appendChild(option3);
+    prioritySelector.appendChild(option1);
+    prioritySelector.appendChild(option2);
+    prioritySelector.appendChild(option3);
     priorityDiv.appendChild(priorityLabel);
-    priorityDiv.appendChild(prioritySelect);
+    priorityDiv.appendChild(prioritySelector);
     addTaskForm.appendChild(priorityDiv);
 
     //TO DO? Input fields for category
 
     //Create Task Button
-    let createTaskButton = document.createElement('button');
-    createTaskButton.innerHTML = 'Create Task';
-    addTaskForm.appendChild(createTaskButton);
+    let submitTaskButton = document.createElement('button');
+    submitTaskButton.setAttribute('id', 'submitTaskButton')
+    submitTaskButton.innerHTML = 'Submit Task';
+    addTaskForm.appendChild(submitTaskButton);
     
-    addTaskDiv.appendChild(addTaskForm)
+    addTaskContainer.appendChild(addTaskForm)
+}
+
+const drawTaskList = (taskList,activeCategory) => {
+    taskListContainer.innerHTML = '';
+
+    let tasksToDisplay = taskList.filter(task => task.category === activeCategory);
+
+    tasksToDisplay.forEach(task => {
+        let taskDiv = document.createElement('div');
+        let pTitle = document.createElement('p');
+        let pDueDate = document.createElement('p');
+        
+        pTitle.innerHTML = task.title;
+        pDueDate.innerHTML = task.dueDate;
+
+        taskDiv.appendChild(pTitle);
+        taskDiv.appendChild(pDueDate);
+
+        taskListContainer.appendChild(taskDiv)
+    })
 }
 
 //Category List DOM
@@ -181,15 +210,14 @@ const drawAddCategory = () => {
 
     //TODO Add Category List Viewer
 
-    categoryContainer.appendChild(addCategoryDiv);
+    addCategoryContainer.appendChild(addCategoryDiv);
 }
 
 //Add New Category DOM
 const drawAddCategoryForm = () => {
 
-    let addCategoryDiv = document.querySelector('#addCategoryDiv')
-
     let addCategoryForm = document.createElement('form');
+    addCategoryForm.setAttribute('id','addCategoryForm')
     let addCategoryLabel = document.createElement('label');
     addCategoryLabel.innerHTML = 'Category Name';
 
@@ -203,7 +231,7 @@ const drawAddCategoryForm = () => {
     addCategoryForm.appendChild(submitCategoryInput)
     addCategoryForm.appendChild(submitCategoryButton);
     
-    addCategoryDiv.appendChild(addCategoryForm);
+    addCategoryContainer.appendChild(addCategoryForm);
 }
 
 //Draw the category list and set active category
@@ -240,14 +268,16 @@ const deleteCategory = (categoryList,id) => {
 
 let taskList = [];
 let categoryList = [];
+let activeCategory
 
 //Initialize Category List and Set Default Category
 const initializeCategoryList = (categoryList,mainCategoryName) => {
     addCategory(categoryList,mainCategoryName,true);
     drawCategoryList(categoryList);
+    activeCategory = mainCategoryName;
 }
 
-initializeCategoryList(categoryList,'Task List');
+initializeCategoryList(categoryList,'Default Task List');
 
 drawAddTask();
 drawAddTaskForm();
@@ -287,18 +317,36 @@ document.addEventListener('click', function(e) {
                 categoryList[i].active = false;
             }
         }
+        activeCategory = categoryList.find(category => category.active === true).title;
         drawCategoryList(categoryList);
+        drawTaskList(taskList,activeCategory)
     }
 })
 
-// deleteCategoryButton.addEventListener('click',function(e) {
-//     e.preventDefault();
-//     console.log('Delete Clicked');
-//     let id = e.target.parentNode.dataset.id;
-//     console.log(e.target.parentNode.dataset.id)
-//     // categoryList = deleteCategory(categoryList,id)
-//     console.log(categoryList);
-// })
+let submitTaskButton = document.querySelector('#submitTaskButton');
+let taskTitleInput = document.querySelector('#taskTitleInput');
+let taskDetailsInput = document.querySelector('#taskDetailsInput');
+let taskDueDateInput = document.querySelector('#taskDueDateInput');
+let taskPrioritySelector = document.querySelector('#taskPrioritySelector');
+
+submitTaskButton.addEventListener('click',function(e) {
+    // e.preventDefault();
+    let title = taskTitleInput.value;
+    let details = taskDetailsInput.value;
+    let dueDate = taskDueDateInput.value;
+    let priority = taskPrioritySelector.value;
+
+    addTask(taskList,title,details,dueDate,priority,activeCategory);
+    drawTaskList(taskList,activeCategory);
+
+    console.log(taskList)
+})
+
+
+
+
+
+
 
 
 
