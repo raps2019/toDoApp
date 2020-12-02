@@ -14,3 +14,7 @@
 .category-div {
     display: flex;
 }
+
+.active-category {
+    background-color: #999;
+}

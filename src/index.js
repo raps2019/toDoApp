@@ -204,25 +204,30 @@ const drawAddCategoryForm = () => {
     addCategoryDiv.appendChild(addCategoryForm);
 }
 
-const drawCategoryList = (categoryList) => {
+const drawCategoryList = (categoryList,activeCategory) => {
     categoryListContainer.innerHTML = '';
-    let categoryListDiv = document.createElement('div');
+    // let categoryListDiv = document.createElement('div');
     
     categoryList.forEach(category => {
         let categoryDiv = document.createElement('div');
         categoryDiv.setAttribute('data-id',category.id);
         categoryDiv.setAttribute('class','category-div')
+        if (category.title === activeCategory) {
+            // categoryDiv.setAttribute('class','active-category');
+            categoryDiv.className += ' active-category';
+        }
         let categoryP = document.createElement('p');
+        categoryP.setAttribute('class','category-name')
         categoryP.innerHTML = category.title;
         let categoryDeleteButton = document.createElement('button');
-        categoryDeleteButton.setAttribute('class','categoryDeleteButton');
+        categoryDeleteButton.setAttribute('class','category-delete-button');
         categoryDeleteButton.innerHTML = 'Delete'
         categoryDiv.appendChild(categoryP);
         categoryDiv.appendChild(categoryDeleteButton);
-        categoryListDiv.appendChild(categoryDiv);
+        categoryListContainer.appendChild(categoryDiv);
     });
 
-    categoryListContainer.appendChild(categoryListDiv);
+    // categoryListContainer.appendChild(categoryListDiv);
 }
 
 const deleteCategory = (categoryList,id) => {
@@ -232,39 +237,63 @@ const deleteCategory = (categoryList,id) => {
 
 //Logic Below --------------------------------------
 
-
 let taskList = [];
 let categoryList = [];
-addCategory(categoryList,'Default');
+let activeCategory;
+
+//Initialize Category List and Set Default Category
+const initializeCategoryList = (categoryList,mainCategoryName) => {
+    activeCategory = mainCategoryName;
+    addCategory(categoryList,mainCategoryName);
+    drawCategoryList(categoryList,activeCategory);
+    let activeCategoryId = categoryList.find(category => category.title === activeCategory).id;
+    console.log(activeCategoryId);
+    let activeCategoryDiv = document.querySelector(`[data-id = '${activeCategoryId}']`);
+    console.log(activeCategoryDiv)
+    activeCategoryDiv.classList.add('active-category')
+}
+
+initializeCategoryList(categoryList,'Task List');
 
 drawAddTask();
 drawAddTaskForm();
 drawAddCategory();
 drawAddCategoryForm();
-drawCategoryList(categoryList);
+// drawCategoryList(categoryList);
 
+let submitCategoryButton = document.querySelector('#submitCategoryButton');
+let submitCategoryInput = document.querySelector('#submitCategoryInput');
+let activeCategoryDiv = document.querySelector('.active-category');
 
-
-submitCategoryButton = document.querySelector('#submitCategoryButton')
-submitCategoryInput = document.querySelector('#submitCategoryInput')
-
+//Submit new category button event listener
 submitCategoryButton.addEventListener('click', function(e) {
     e.preventDefault();
     categoryList = addCategory(categoryList,submitCategoryInput.value);
-    drawCategoryList(categoryList);
+    drawCategoryList(categoryList,activeCategory);
 })
 
+
+//Delete Category Button Event Listener
 document.addEventListener('click',function(e) {
     e.preventDefault();
-    console.log(e.target.className)
-    if (e.target.className === 'categoryDeleteButton') {
+    if (e.target.className === 'category-delete-button') {
         let id = e.target.parentNode.dataset.id;
-        console.log(e.target.parentNode.dataset.id)
         categoryList = deleteCategory(categoryList,id)
-        console.log(categoryList);
-        drawCategoryList(categoryList);
+        drawCategoryList(categoryList,activeCategory);
+    }
+});
+
+//Active Category Selector Event Listener
+document.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (e.target.className === 'category-name') {
+        activeCategory = e.target.innerHTML;
+        drawCategoryList(categoryList,activeCategory);
     }
 })
+
+
+
 
 // deleteCategoryButton.addEventListener('click',function(e) {
 //     e.preventDefault();
