@@ -20,10 +20,10 @@ const taskProto = {
         this.category = newCategory;
     },
     toggleStatus() {
-        if (this.status === 'notDone') {
-            this.status = 'done';
+        if (this.completed === false) {
+            this.completed = true;
         } else {
-            this.status = 'notDone'
+            this.completed = false
         }
     },
     // addTodo() {
@@ -75,12 +75,10 @@ const categoryFactory = (title,active) => {
 
 const addCategory = (categoryList,title,active) => {
     categoryList.push(categoryFactory(title,active));
-    return categoryList;
 }
 
 const addTask = (taskList,title,details,dueDate,priority,category) => {
     taskList.push(taskFactory(title,details,dueDate,priority,category));
-    return taskList;
 }
 
 //DOM Below ----------------------------------------------------------------
@@ -92,24 +90,29 @@ let categoryContainer = document.querySelector('#categoryContainer')
 let categoryListContainer = document.querySelector("#categoryListContainer")
 let addCategoryContainer = document.querySelector('#addCategoryContainer')
 
+
+
 //Draw Add Task DOM
 const drawAddTask = () => {
     let addTaskDiv = document.createElement('div');
-    addTaskDiv.setAttribute('id','addTaskDiv')
-    let addTaskButton = document.createElement('button');
-    addTaskButton.innerHTML = 'Add New Task';
-    addTaskDiv.appendChild(addTaskButton);
+    addTaskDiv.setAttribute('id','addTaskDiv');
+    let toggleTaskFormButton = document.createElement('button');
+    toggleTaskFormButton.setAttribute('id','toggleTaskFormButton');
+    toggleTaskFormButton.innerHTML = 'Add New Task';
+    addTaskDiv.appendChild(toggleTaskFormButton);
     addTaskContainer.appendChild(addTaskDiv);
 }
 
 //Task Creation Form
-const drawAddTaskForm = () => {
+const drawAddTaskForm = (status) => {
 
     // let addTaskDiv = document.querySelector('#addTaskDiv')
 
     //Create Form
     let addTaskForm = document.createElement('form');
+
     addTaskForm.setAttribute('id', 'addTaskForm');
+    addTaskForm.setAttribute('class','add-task-form-inactive')
     
     //Input Fields for Title
     let titleDiv = document.createElement('div');
@@ -178,6 +181,7 @@ const drawAddTaskForm = () => {
     addTaskContainer.appendChild(addTaskForm)
 }
 
+//Draw Task List
 const drawTaskList = (taskList,activeCategory) => {
     taskListContainer.innerHTML = '';
 
@@ -185,28 +189,49 @@ const drawTaskList = (taskList,activeCategory) => {
 
     tasksToDisplay.forEach(task => {
         let taskDiv = document.createElement('div');
+        taskDiv.setAttribute('class','task');
+        taskDiv.dataset.id = task.id;
+        let completedCheckBox = document.createElement('input');
+        completedCheckBox.setAttribute('type','checkbox');
+        completedCheckBox.setAttribute('id','completedCheckBox');
         let pTitle = document.createElement('p');
         let pDueDate = document.createElement('p');
-        
+        let deleteTaskButton = document.createElement('button');
+        deleteTaskButton.setAttribute('id','deleteTaskButton')
+        deleteTaskButton.innerHTML = 'Delete'
+    
         pTitle.innerHTML = task.title;
-        pDueDate.innerHTML = task.dueDate;
 
+        if (task.dueDate === '') {
+            pDueDate.innerHTML = 'None'
+        } else {
+            pDueDate.innerHTML = task.dueDate;
+        }
+
+        if (task.completed === false) {
+            completedCheckBox.checked = false;
+        } else {
+            completedCheckBox.checked = true;
+        }
+
+        taskDiv.appendChild(completedCheckBox);
         taskDiv.appendChild(pTitle);
         taskDiv.appendChild(pDueDate);
-
+        taskDiv.appendChild(deleteTaskButton);
         taskListContainer.appendChild(taskDiv)
     })
 }
+
 
 //Category List DOM
 const drawAddCategory = () => {
 
     let addCategoryDiv = document.createElement('div');
     addCategoryDiv.setAttribute('id','addCategoryDiv')
-    let addCatergoryButton = document.createElement('button');
-    addCatergoryButton.setAttribute('id','addCategoryButton');
-    addCatergoryButton.innerHTML = 'Add New Category'
-    addCategoryDiv.appendChild(addCatergoryButton);
+    let toggleCategoryFormButton = document.createElement('button');
+    toggleCategoryFormButton.setAttribute('id','toggleCategoryFormButton');
+    toggleCategoryFormButton.innerHTML = 'Add New Category'
+    addCategoryDiv.appendChild(toggleCategoryFormButton);
 
     //TODO Add Category List Viewer
 
@@ -217,7 +242,10 @@ const drawAddCategory = () => {
 const drawAddCategoryForm = () => {
 
     let addCategoryForm = document.createElement('form');
-    addCategoryForm.setAttribute('id','addCategoryForm')
+    addCategoryForm.setAttribute('id','addCategoryForm');
+
+    addCategoryForm.setAttribute('class','add-category-form-inactive')
+
     let addCategoryLabel = document.createElement('label');
     addCategoryLabel.innerHTML = 'Category Name';
 
@@ -225,8 +253,9 @@ const drawAddCategoryForm = () => {
     submitCategoryInput.setAttribute('id','submitCategoryInput');
 
     let submitCategoryButton = document.createElement('button');
+    submitCategoryButton.setAttribute('id','submitCategoryButton'); //NEED TO FIX THIS ISSUE HERE - Causes date picker to not appear
     submitCategoryButton.innerHTML = 'Submit Category';
-    submitCategoryButton.setAttribute('id','submitCategoryButton');
+
     addCategoryForm.appendChild(addCategoryLabel);
     addCategoryForm.appendChild(submitCategoryInput)
     addCategoryForm.appendChild(submitCategoryButton);
@@ -280,21 +309,12 @@ const initializeCategoryList = (categoryList,mainCategoryName) => {
 initializeCategoryList(categoryList,'Default Task List');
 
 drawAddTask();
-drawAddTaskForm();
+drawAddTaskForm('inactive');
 drawAddCategory();
 drawAddCategoryForm();
-// drawCategoryList(categoryList);
 
 let submitCategoryButton = document.querySelector('#submitCategoryButton');
 let submitCategoryInput = document.querySelector('#submitCategoryInput');
-
-//Submit new category button event listener
-submitCategoryButton.addEventListener('click', function(e) {
-    e.preventDefault();
-    categoryList = addCategory(categoryList,submitCategoryInput.value,false);
-    drawCategoryList(categoryList);
-})
-
 
 //Delete Category Button Event Listener
 document.addEventListener('click',function(e) {
@@ -323,24 +343,74 @@ document.addEventListener('click', function(e) {
     }
 })
 
-let submitTaskButton = document.querySelector('#submitTaskButton');
-let taskTitleInput = document.querySelector('#taskTitleInput');
-let taskDetailsInput = document.querySelector('#taskDetailsInput');
-let taskDueDateInput = document.querySelector('#taskDueDateInput');
-let taskPrioritySelector = document.querySelector('#taskPrioritySelector');
-
+//Submit Task Event Listenen
 submitTaskButton.addEventListener('click',function(e) {
-    // e.preventDefault();
-    let title = taskTitleInput.value;
-    let details = taskDetailsInput.value;
-    let dueDate = taskDueDateInput.value;
-    let priority = taskPrioritySelector.value;
+        let title = taskTitleInput.value;
+        let details = taskDetailsInput.value;
+        let dueDate = taskDueDateInput.value;
+        let priority = taskPrioritySelector.value;
 
-    addTask(taskList,title,details,dueDate,priority,activeCategory);
-    drawTaskList(taskList,activeCategory);
-
-    console.log(taskList)
+        addTask(taskList,title,details,dueDate,priority,activeCategory);
+        drawTaskList(taskList,activeCategory);
+    
 })
+
+//Toggle Add New Task Form
+toggleTaskFormButton.addEventListener('click',function(e) {
+    e.preventDefault();
+    if (addTaskForm.className === 'add-task-form-inactive') {
+        addTaskForm.className = 'add-task-form-active';
+    } else {
+        addTaskForm.className = 'add-task-form-inactive';
+    }
+})
+
+//Toggle Task Completed Status
+document.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (e.target.id === 'completedCheckBox') {
+        let id = e.target.parentNode.dataset.id;
+        taskList.find(task => task.id === id).toggleStatus();
+        drawTaskList(taskList,activeCategory);
+    }
+})
+
+//Delete Task
+document.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (e.target.id === 'deleteTaskButton'){
+        let id = e.target.parentNode.dataset.id;
+        taskList = taskList.filter(task => task.id != id)
+        drawTaskList(taskList,activeCategory);
+    }
+})
+
+//Toggle Add New Category Form
+toggleCategoryFormButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (addCategoryForm.className === 'add-category-form-active') {
+        addCategoryForm.className = 'add-category-form-inactive';
+    } else {
+        addCategoryForm.className = 'add-category-form-active';
+    }
+})
+
+//Submit new category button event listener
+submitCategoryButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    //Check if Category Exists already
+    for (i = 0; i < categoryList.length; i++) {
+        if ((categoryList[i].title).toLowerCase() === (submitCategoryInput.value).toLowerCase()) {
+            alert('Category Exists');
+            return;
+        }
+    };
+    // if (categoryList.indexOf(submitCategoryInput.value))
+    addCategory(categoryList,submitCategoryInput.value,false);
+    drawCategoryList(categoryList);
+});
+
+
 
 
 

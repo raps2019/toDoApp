@@ -18,3 +18,8 @@
 .active-category {
     background-color: #999;
 }
+
+.task {
+    display: flex;
+    justify-content: space-between;
+}
