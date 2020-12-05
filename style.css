@@ -19,7 +19,19 @@
     background-color: #999;
 }
 
-.task {
-    display: flex;
-    justify-content: space-between;
+.task-list-table {
+    width: 100%;
+    padding: 10px;
+}
+
+.task-form-inactive {
+    position: absolute;
+    right: -300px;
+
+}
+
+.task-form-active {
+    position: absolute;
+    top: 25vh;
+    right: 50vh;
 }
