@@ -7,7 +7,7 @@ const taskProto = {
     editTitle(newTitle) {
         this.title = newTitle;
     },
-    editDescription(newDetails) {
+    editDetails(newDetails) {
         this.details = newDetails;
     },
     editDueDate(newDueDate) {
@@ -26,17 +26,6 @@ const taskProto = {
             this.completed = false
         }
     },
-    // addTodo() {
-    //     taskList.push(this);
-    // },
-    // deleteTodo() {
-    //     for (let i = 0; i < taskList.length; i++) {
-    //         if (taskList[i] === this) {
-    //             taskList.splice(i,1);
-    //             return;
-    //         }
-    //     }
-    // },
 }
 
 //task Factory Function
@@ -108,11 +97,17 @@ const drawAddTask = () => {
 const drawTaskForm = (mode,taskId,taskList) => {
 
     taskForm.innerHTML = '';
+    let currentTitle, currentDetails, currentDueDate, currentPriority,currentTask;
 
     if (mode === 'editTask'){
-        taskForm.dataset.taskId = taskId;
+        taskForm.dataset.id = taskId;
+        currentTask = taskList.find(task => task.id === taskId);
+        currentTitle = currentTask.title;
+        currentDetails = currentTask.details;
+        currentDueDate = currentTask.dueDate;
+        currentPriority = currentTask.priority;
     } else {
-        taskForm.dataset.taskId = null;
+        taskForm.dataset.id = null;
     }
 
     let h1 = document.createElement('h1');
@@ -136,7 +131,10 @@ const drawTaskForm = (mode,taskId,taskList) => {
     titleLabel.innerHTML = 'Title:'
     let titleInput = document.createElement('input');
     titleInput.setAttribute('type','text');
-    titleInput.setAttribute('id',"taskTitleInput")
+    titleInput.setAttribute('id',"taskTitleInput");
+    if (mode === 'editTask'){
+        titleInput.value = currentTitle;
+    }
     titleDiv.appendChild(titleLabel);
     titleDiv.appendChild(titleInput);
     taskForm.appendChild(titleDiv);
@@ -147,7 +145,10 @@ const drawTaskForm = (mode,taskId,taskList) => {
     detailsLabel.innerHTML = 'Details:'
     let detailsInput = document.createElement('input');
     detailsInput.setAttribute('type','text');
-    detailsInput.setAttribute('id',"taskDetailsInput")
+    detailsInput.setAttribute('id',"taskDetailsInput");
+    if (mode === 'editTask') {
+        detailsInput.value = currentDetails;
+    }
     detailsDiv.appendChild(detailsLabel);
     detailsDiv.appendChild(detailsInput);
     taskForm.appendChild(detailsDiv);
@@ -160,6 +161,9 @@ const drawTaskForm = (mode,taskId,taskList) => {
     let dueDateInput = document.createElement('input');
     dueDateInput.setAttribute('type','date');
     dueDateInput.setAttribute('id',"taskDueDateInput")
+    if (mode === 'editTask') {
+        dueDateInput.value = currentDueDate;
+    }
     dueDateDiv.appendChild(dueDateLabel);
     dueDateDiv.appendChild(dueDateInput);
     taskForm.appendChild(dueDateDiv);
@@ -179,9 +183,22 @@ const drawTaskForm = (mode,taskId,taskList) => {
     let option3 = document.createElement('option');
     option3.setAttribute('value','low');
     option3.innerHTML = 'Low';  
+ 
     prioritySelector.appendChild(option1);
     prioritySelector.appendChild(option2);
     prioritySelector.appendChild(option3);
+
+    if (mode === 'editTask') {
+        console.log(currentPriority)
+        if (currentPriority === 'low') {
+            prioritySelector.value = 'low';
+        } else if (currentPriority === 'normal') {
+            prioritySelector.value = 'normal';
+        } else if (currentPriority === 'high') {
+            prioritySelector.value = 'high';
+        }       
+    }
+
     priorityDiv.appendChild(priorityLabel);
     priorityDiv.appendChild(prioritySelector);
     taskForm.appendChild(priorityDiv);
@@ -243,6 +260,11 @@ const drawTaskList = (taskList,activeCategory) => {
         }
 
         taskRow.appendChild(tdDueDate);
+
+        //Create priority data element
+        let tdPriority = document.createElement('td');
+        tdPriority.innerHTML = task.priority;
+        taskRow.appendChild(tdPriority);
 
         //Create deleteTask button element and append to table row
         let tdDeleteTask = document.createElement('td');
@@ -395,11 +417,18 @@ window.addEventListener('click',function(e) {
         if (e.target.parentNode.className === 'add-new-task-form') { 
             addTask(taskList,title,details,dueDate,priority,activeCategory);
             drawTaskList(taskList,activeCategory);
-        } else if (e.target.parentNode.id = 'edit task-form') {
+        } else if (e.target.parentNode.id = 'edit-task-form') {
             console.log('edit submit clicked')
-            let id = e.target.parentNode.parentNode.dataset.id;
+            let id = e.target.parentNode.dataset.id;
             console.log(id)
+            let task = taskList.find(task => task.id === id);
+            task.editTitle(title);
+            task.editDetails(details);
+            task.editDueDate(dueDate);
+            task.editPriority(priority);
+            drawTaskList(taskList,activeCategory);
         }
+        drawTaskForm('newTask');
     }
 })
 
@@ -427,7 +456,7 @@ document.addEventListener('click',function(e) {
     } else if (e.target.className === "edit-task-button") {
         let taskId = e.target.parentNode.parentNode.dataset.id;
         drawTaskForm('editTask',taskId,taskList);
-        taskForm.className = 'eidt-task-form'
+        taskForm.className = 'edit-task-form'
     }
 });
 
