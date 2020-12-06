@@ -94,7 +94,7 @@ const drawAddTask = () => {
 }
 
 //Task Creation Form
-const drawTaskForm = (mode,taskId,taskList) => {
+const drawTaskForm = (mode,taskId,taskList,categoryList) => {
 
     taskForm.innerHTML = '';
     let currentTitle, currentDetails, currentDueDate, currentPriority,currentTask;
@@ -202,6 +202,23 @@ const drawTaskForm = (mode,taskId,taskList) => {
     priorityDiv.appendChild(priorityLabel);
     priorityDiv.appendChild(prioritySelector);
     taskForm.appendChild(priorityDiv);
+
+    if (mode === 'editTask') {
+        let categoryDiv = document.createElement('div');
+        let categoryLabel = document.createElement('Label');
+        categoryLabel.innerHTML = 'Category';
+        let categorySelector = document.createElement('select');
+        categorySelector.setAttribute('id','taskCategorySelector');
+        for (let i = 0; i < categoryList.length; i++) {
+            let option = document.createElement('option');
+            option.setAttribute('value',categoryList[i].title);
+            option.innerHTML = categoryList[i].title;
+            categorySelector.appendChild(option);
+        }
+        categoryDiv.appendChild(categoryLabel);
+        categoryDiv.appendChild(categorySelector);
+        taskForm.appendChild(categoryDiv);
+    }
 
     //TO DO? Input fields for category
 
@@ -383,6 +400,9 @@ document.addEventListener('click',function(e) {
     e.preventDefault();
     if (e.target.className === 'category-delete-button') {
         let id = e.target.parentNode.dataset.id;
+        let category = categoryList.find(category => category.id === id);
+        let categoryTitle = category.title;
+        taskList = taskList.filter(task => task.category != categoryTitle);
         categoryList = deleteCategory(categoryList,id)
         drawCategoryList(categoryList);
     }
@@ -402,6 +422,8 @@ document.addEventListener('click', function(e) {
         activeCategory = categoryList.find(category => category.active === true).title;
         drawCategoryList(categoryList);
         drawTaskList(taskList,activeCategory)
+        taskForm.className = 'add-new-task-form';
+        drawTaskForm('newTask');
     }
 })
 
@@ -418,14 +440,14 @@ window.addEventListener('click',function(e) {
             addTask(taskList,title,details,dueDate,priority,activeCategory);
             drawTaskList(taskList,activeCategory);
         } else if (e.target.parentNode.id = 'edit-task-form') {
-            console.log('edit submit clicked')
             let id = e.target.parentNode.dataset.id;
-            console.log(id)
             let task = taskList.find(task => task.id === id);
+            let category = taskCategorySelector.value;
             task.editTitle(title);
             task.editDetails(details);
             task.editDueDate(dueDate);
             task.editPriority(priority);
+            task.editCategory(category);
             drawTaskList(taskList,activeCategory);
         }
         drawTaskForm('newTask');
@@ -455,7 +477,7 @@ document.addEventListener('click',function(e) {
         //}
     } else if (e.target.className === "edit-task-button") {
         let taskId = e.target.parentNode.parentNode.dataset.id;
-        drawTaskForm('editTask',taskId,taskList);
+        drawTaskForm('editTask',taskId,taskList,categoryList);
         taskForm.className = 'edit-task-form'
     }
 });
