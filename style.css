@@ -1,4 +1,4 @@
-.task-container {
+.task-content {
     border: solid black 1px;
 }
 
@@ -19,9 +19,10 @@
     background-color: #999;
 }
 
-.task-list-table {
-    width: 100%;
-    padding: 10px;
+.task-row {
+    display: flex;
+    padding: 20px;
+    justify-content: space-around;
 }
 
 .task-form-inactive {
@@ -34,4 +35,8 @@
     position: absolute;
     top: 25vh;
     right: 50vh;
+}
+
+.task-row-one {
+    display: flex;
 }

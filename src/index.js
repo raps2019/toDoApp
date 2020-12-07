@@ -72,9 +72,8 @@ const addTask = (taskList,title,details,dueDate,priority,category) => {
 
 //DOM Below ----------------------------------------------------------------
 //Query Selectors
-let taskContainer = document.querySelector("#taskContainer")
-let addNewTask = document.querySelector('#addNewTask');
-let taskListTable = document.querySelector('#taskListTable');
+let taskContent = document.querySelector("#taskContent")
+let taskListContainer = document.querySelector('#taskListContainer');
 let taskForm = document.querySelector('#taskForm');
 let categoryContainer = document.querySelector('#categoryContainer')
 let categoryListContainer = document.querySelector("#categoryListContainer")
@@ -90,7 +89,7 @@ const drawAddTask = () => {
     addNewTaskButton.setAttribute('class','add-new-task-button');
     addNewTaskButton.innerHTML = 'Add New Task';
     addTaskDiv.appendChild(addNewTaskButton);
-    addNewTask.appendChild(addTaskDiv);
+    taskListContainer.prepend(addTaskDiv);
 }
 
 //Task Creation Form
@@ -117,8 +116,6 @@ const drawTaskForm = (mode,taskId,taskList,categoryList) => {
     } else if (mode === 'editTask') {
         h1.innerHTML = "Edit Task";
     }
-
-
 
     taskForm.appendChild(h1);
 
@@ -235,16 +232,22 @@ const drawTaskForm = (mode,taskId,taskList,categoryList) => {
 
 //Draw Task List
 const drawTaskList = (taskList,activeCategory) => {
-    taskListTable.innerHTML = '';
+    taskListContainer.innerHTML = '';
+
 
     let tasksToDisplay = taskList.filter(task => task.category === activeCategory);
 
     tasksToDisplay.forEach(task => {
 
         //Create a table row and assign id from taskList Object
-        let taskRow = document.createElement('tr');
-        taskRow.setAttribute('class','task-row');
-        taskRow.dataset.id = task.id;
+        let taskContainer = document.createElement('div');
+        taskContainer.setAttribute('class','task-container');
+        taskContainer.dataset.taskid = task.id;
+        taskListContainer.appendChild(taskContainer);
+
+        let taskRowOneDiv = document.createElement('div');
+        taskRowOneDiv.setAttribute('class','task-row-one');
+        
 
         //Create completed check box and append to table Row        
         let completedCheckBox = document.createElement('input');
@@ -258,16 +261,17 @@ const drawTaskList = (taskList,activeCategory) => {
             completedCheckBox.checked = true;
         }
 
-        taskRow.appendChild(completedCheckBox);
+        taskRowOneDiv.appendChild(completedCheckBox);
 
         //Create Title Data Element and append to table row
-        let tdTitle = document.createElement('td');
-        tdTitle.innerHTML = task.title;
+        let pTitle = document.createElement('p');
+        pTitle.innerHTML = task.title;
+        pTitle.setAttribute('class','task-title')
 
-        taskRow.appendChild(tdTitle);
+        taskRowOneDiv.appendChild(pTitle);
 
         //Create due date data element and append to table row
-        let tdDueDate = document.createElement('td');
+        let tdDueDate = document.createElement('p');
 
         //If not date entered, set dueDate to 'None'
         if (task.dueDate === '') {
@@ -276,29 +280,28 @@ const drawTaskList = (taskList,activeCategory) => {
             tdDueDate.innerHTML = task.dueDate;
         }
 
-        taskRow.appendChild(tdDueDate);
+        taskRowOneDiv.appendChild(tdDueDate);
 
         //Create priority data element
-        let tdPriority = document.createElement('td');
-        tdPriority.innerHTML = task.priority;
-        taskRow.appendChild(tdPriority);
+        let pPriority = document.createElement('p');
+        pPriority.innerHTML = task.priority;
+        taskRowOneDiv.appendChild(pPriority);
 
         //Create deleteTask button element and append to table row
-        let tdDeleteTask = document.createElement('td');
         let deleteTaskButton = document.createElement('button');
         deleteTaskButton.setAttribute('class','delete-task-button')
         deleteTaskButton.innerHTML = 'Delete';
-        taskRow.appendChild(tdDeleteTask).appendChild(deleteTaskButton);
+        taskRowOneDiv.appendChild(deleteTaskButton);
 
         //Create editTask button
-        let tdEditTask = document.createElement('td');
         let editTaskButton = document.createElement('button');
         editTaskButton.setAttribute('class','edit-task-button');
         editTaskButton.innerHTML = 'Edit';
-        taskRow.appendChild(tdEditTask).appendChild(editTaskButton)
+        taskRowOneDiv.appendChild(editTaskButton)
 
         //Append task row to task table
-        taskListTable.appendChild(taskRow);  
+        taskContainer.appendChild(taskRowOneDiv);  
+        taskListContainer.appendChild(taskContainer);
     })
 }
 
@@ -428,7 +431,7 @@ document.addEventListener('click', function(e) {
 })
 
 //Submit Task Event Listener
-window.addEventListener('click',function(e) {
+document.addEventListener('click',function(e) {
     if (e.target.id === 'submitTaskButton') {
 
         let title = taskTitleInput.value;
@@ -439,6 +442,7 @@ window.addEventListener('click',function(e) {
         if (e.target.parentNode.className === 'add-new-task-form') { 
             addTask(taskList,title,details,dueDate,priority,activeCategory);
             drawTaskList(taskList,activeCategory);
+            drawAddTask();
         } else if (e.target.parentNode.id = 'edit-task-form') {
             let id = e.target.parentNode.dataset.id;
             let task = taskList.find(task => task.id === id);
@@ -449,6 +453,7 @@ window.addEventListener('click',function(e) {
             task.editPriority(priority);
             task.editCategory(category);
             drawTaskList(taskList,activeCategory);
+            drawAddTask();
         }
         drawTaskForm('newTask');
     }
@@ -501,6 +506,28 @@ document.addEventListener('click', function(e) {
         console.log(id)
         taskList = taskList.filter(task => task.id != id)
         drawTaskList(taskList,activeCategory);
+    }
+})
+
+//Toggle details when task title is clicked
+document.addEventListener('click', function(e) {
+    if (e.target.className === 'task-title') {
+        if (e.target.parentNode.parentNode.classList.contains('details-shown')) {
+            e.target.parentNode.parentNode.classList.remove('details-shown');
+            let taskId = e.target.parentNode.parentNode.dataset.taskid;
+            console.log(taskId)
+            let selectedTaskContainer = document.querySelector(`[data-taskid='${taskId}']`);
+            console.log(selectedTaskContainer)
+            selectedTaskContainer.removeChild(selectedTaskContainer.lastChild);
+        } else {
+            e.target.parentNode.parentNode.classList.add('details-shown');
+            let pDetails = document.createElement('p');
+            let taskId = e.target.parentNode.parentNode.dataset.taskid;
+            let taskDetails = (taskList.find(task => task.id === taskId)).details;
+            pDetails.innerHTML = taskDetails;
+            e.target.parentNode.parentNode.appendChild(pDetails)
+        }
+        // e.target.parentNode.
     }
 })
 
